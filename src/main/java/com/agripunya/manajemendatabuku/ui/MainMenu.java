@@ -1,116 +1,174 @@
 package com.agripunya.manajemendatabuku.ui;
 
+import com.agripunya.manajemendatabuku.util.DatabaseUtil;
+
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 public class MainMenu extends JFrame {
 
-    // Constructor
+    private JPanel contentPanel;
+    private JPanel topPanel;  // Panel gabungan untuk button dan search field
+    private JTextField searchField;  // Untuk menampung nilai pencarian
+
     public MainMenu() {
-        // Set title and default close operation
         setTitle("Manajemen Data Buku");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(800, 600);
-        setLocationRelativeTo(null);  // Center the window
+        setLocationRelativeTo(null);
 
-        // Set layout manager
+        // Set Layout Manager
         setLayout(new BorderLayout());
 
-        // Create the menu bar
-        JMenuBar menuBar = new JMenuBar();
+        // Top Panel (Untuk tombol dan search field)
+        topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));  // Layout vertikal
+        add(topPanel, BorderLayout.NORTH);
 
-        // HOME menu
-        JMenu homeMenu = new JMenu("Home");
-        menuBar.add(homeMenu);
+        // Button Panel (untuk tombol seperti Home, Data Buku, dll.)
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10)); // Horizontal layout with space
+        topPanel.add(buttonPanel);
 
-        // Data Buku Menu
-        JMenu dataBukuMenu = new JMenu("Data Buku");
-        menuBar.add(dataBukuMenu);
+        // Create Buttons
+        JButton homeButton = new JButton("Home");
+        homeButton.setPreferredSize(new Dimension(148, 30));  // Adjust size
+        homeButton.addActionListener(e -> showHomeTable());
+        buttonPanel.add(homeButton);
 
-        // Data Peminjam Menu
-        JMenu dataPeminjamMenu = new JMenu("Data Peminjam");
-        menuBar.add(dataPeminjamMenu);
+        JButton dataBukuButton = new JButton("Data Buku");
+        dataBukuButton.setPreferredSize(new Dimension(148, 30));  // Adjust size
+        dataBukuButton.addActionListener(e -> showDataBukuTable());
+        buttonPanel.add(dataBukuButton);
 
-        // Peminjaman Menu
-        JMenu peminjamanMenu = new JMenu("Peminjaman");
-        menuBar.add(peminjamanMenu);
+        JButton dataPeminjamButton = new JButton("Data Peminjam");
+        dataPeminjamButton.setPreferredSize(new Dimension(148, 30));  // Adjust size
+        dataPeminjamButton.addActionListener(e -> showDataPeminjamTable());
+        buttonPanel.add(dataPeminjamButton);
 
-        // Pengembalian Menu
-        JMenu pengembalianMenu = new JMenu("Pengembalian");
-        menuBar.add(pengembalianMenu);
+        JButton peminjamanButton = new JButton("Peminjaman");
+        peminjamanButton.setPreferredSize(new Dimension(148, 30));  // Adjust size
+        peminjamanButton.addActionListener(e -> showPeminjamanTable());
+        buttonPanel.add(peminjamanButton);
 
-        // Create a new menu for Search dan Search Field
-        JMenu searchMenu = new JMenu("Search");
-        JTextField SearchField = new JTextField("") ;
+        JButton pengembalianButton = new JButton("Pengembalian");
+        pengembalianButton.setPreferredSize(new Dimension(148, 30));  // Adjust size
+        pengembalianButton.addActionListener(e -> showPengembalianTable());
+        buttonPanel.add(pengembalianButton);
 
-        // Add the search menu to the menu bar
-        menuBar.add(searchMenu);
-        menuBar.add(SearchField);
+        // Search Field and Button Panel
+        JPanel searchPanel = new JPanel();
+        searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10)); // Space between components
+        searchField = new JTextField(20); // Size of the search field
+        JButton searchButton = new JButton("Search");
 
-        // Set the menu bar
-        setJMenuBar(menuBar);
+        // Add the search components to the panel
+        searchPanel.add(searchField);
+        searchPanel.add(searchButton);
 
+        // Add the search panel to the topPanel (after the buttonPanel)
+        topPanel.add(searchPanel);
 
-        // Create Toolbar
-        JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
+        // Add action listener for the search button
+        searchButton.addActionListener(e -> performSearch());
 
-        // Toolbar buttons
-        JButton tambahBukuButton = new JButton("Tambah Buku");
-        JButton tambahPeminjamButton = new JButton("Tambah Peminjam");
-        JButton tambahPeminjamanButton = new JButton("Tambah Peminjaman");
-        JButton tambahPengembalianButton = new JButton("Tambah Pengembalian");
-
-        toolBar.add(tambahBukuButton);
-        toolBar.add(tambahPeminjamButton);
-        toolBar.add(tambahPeminjamanButton);
-        toolBar.add(tambahPengembalianButton);
-
-        // Add the toolbar to the top of the frame
-        add(toolBar, BorderLayout.NORTH);
-
-        // Sample content panel
-        JPanel contentPanel = new JPanel();
-        contentPanel.add(new JLabel("Manajemen Data Buku"));
+        // Content Panel
+        contentPanel = new JPanel(new BorderLayout());
         add(contentPanel, BorderLayout.CENTER);
+
+        // Default Home Table
+        showHomeTable();
     }
 
-    // Method to show the Data Buku table
+    private void performSearch() {
+        String searchTerm = searchField.getText();
+        if (searchTerm.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a search term.", "Search Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Modify this query based on your actual search requirement
+        String query = "SELECT * FROM buku WHERE judul LIKE '%" + searchTerm + "%' OR penulis LIKE '%" + searchTerm + "%'";
+
+        // Display search results
+        displayTable(query);
+    }
+
+    private void showHomeTable() {
+        String query = "SELECT id AS id, judul, penulis, penerbit, NULL AS peminjam, NULL AS tanggal_pinjam, NULL AS tanggal_kembali, NULL AS denda " +
+                "FROM buku " +
+                "UNION ALL " +
+                "SELECT id AS id, nama AS judul, NULL AS penulis, NULL AS penerbit, alamat AS peminjam, NULL AS tanggal_pinjam, NULL AS tanggal_kembali, NULL AS denda " +
+                "FROM peminjam " +
+                "UNION ALL " +
+                "SELECT id AS id, NULL AS judul, NULL AS penulis, NULL AS penerbit, NULL AS peminjam, tanggal_pinjam, tanggal_kembali, denda " +
+                "FROM peminjaman";
+        displayTable(query);
+    }
+
     private void showDataBukuTable() {
-        // Create a new panel to display the table
-        JPanel dataBukuPanel = new JPanel();
-        dataBukuPanel.setLayout(new BorderLayout());
-
-        // Create the table with sample data
-        String[] columnNames = {"ID Buku", "Judul", "Penulis", "Penerbit"};
-        Object[][] data = {
-                {"1", "Java Programming", "John Doe", "Tech Books"},
-                {"2", "Advanced Java", "Jane Smith", "Code Publishers"},
-                {"3", "Learning Swing", "Michael Brown", "GUI Press"}
-        };
-        JTable bukuTable = new JTable(data, columnNames);
-
-        // Add the table to a scroll pane
-        JScrollPane scrollPane = new JScrollPane(bukuTable);
-        dataBukuPanel.add(scrollPane, BorderLayout.CENTER);
-
-        // Display the new panel in the center of the frame
-        getContentPane().removeAll();
-        add(dataBukuPanel, BorderLayout.CENTER);
-        revalidate();
-        repaint();
+        String query = "SELECT * FROM buku";
+        displayTable(query);
     }
 
-    // Main method to launch the application
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                MainMenu mainMenu = new MainMenu();
-                mainMenu.setVisible(true);
+    private void showDataPeminjamTable() {
+        String query = "SELECT * FROM peminjam";
+        displayTable(query);
+    }
+
+    private void showPeminjamanTable() {
+        String query = "SELECT * FROM peminjaman";
+        displayTable(query);
+    }
+
+    private void showPengembalianTable() {
+        String query = "SELECT * FROM pengembalian";
+        displayTable(query);
+    }
+
+    private void displayTable(String query) {
+        try (Connection conn = DatabaseUtil.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            DefaultTableModel tableModel = new DefaultTableModel();
+            int columnCount = rs.getMetaData().getColumnCount();
+
+            // Set table columns
+            for (int i = 1; i <= columnCount; i++) {
+                tableModel.addColumn(rs.getMetaData().getColumnName(i));
             }
+
+            // Add rows to table model
+            while (rs.next()) {
+                Object[] row = new Object[columnCount];
+                for (int i = 1; i <= columnCount; i++) {
+                    row[i - 1] = rs.getObject(i);
+                }
+                tableModel.addRow(row);
+            }
+
+            // Create JTable and add to content panel
+            JTable table = new JTable(tableModel);
+            JScrollPane scrollPane = new JScrollPane(table);
+
+            contentPanel.removeAll();
+            contentPanel.add(scrollPane, BorderLayout.CENTER);
+            contentPanel.revalidate();
+            contentPanel.repaint();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            MainMenu mainMenu = new MainMenu();
+            mainMenu.setVisible(true);
         });
     }
 }
