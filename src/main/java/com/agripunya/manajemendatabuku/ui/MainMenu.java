@@ -52,6 +52,7 @@ public class MainMenu extends JFrame {
         // Set the menu bar
         setJMenuBar(menuBar);
 
+
         // Create Toolbar
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
