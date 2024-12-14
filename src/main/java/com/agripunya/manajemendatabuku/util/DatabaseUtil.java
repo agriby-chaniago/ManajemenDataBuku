@@ -30,16 +30,4 @@ public class DatabaseUtil {
             throw e;
         }
     }
-
-
-    // Metode untuk menutup koneksi
-    public static void closeConnection(Connection connection) {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                System.err.println("Gagal menutup koneksi: " + e.getMessage());
-            }
-        }
-    }
 }
