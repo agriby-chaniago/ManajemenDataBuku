@@ -1,7 +1,7 @@
 package com.agripunya.manajemendatabuku;
 
-import com.agripunya.manajemendatabuku.ui.dialog.LoginDialog;
-import com.agripunya.manajemendatabuku.ui.panel.BukuPanel;
+import com.agripunya.manajemendatabuku.dialog.LoginDialog;
+import com.agripunya.manajemendatabuku.panel.BukuPanel;
 
 /**
  * <h1>Manajemen Data Buku - Main Class</h1>
@@ -24,8 +24,8 @@ import com.agripunya.manajemendatabuku.ui.panel.BukuPanel;
  *
  * <h2>Dependencies:</h2>
  * <ul>
- *     <li>{@link com.agripunya.manajemendatabuku.ui.dialog.LoginDialog}</li>
- *     <li>{@link com.agripunya.manajemendatabuku.ui.panel.BukuPanel}</li>
+ *     <li>{@link com.agripunya.manajemendatabuku.dialog.LoginDialog}</li>
+ *     <li>{@link com.agripunya.manajemendatabuku.panel.BukuPanel}</li>
  * </ul>
  *
  * <h2>Catatan:</h2>
